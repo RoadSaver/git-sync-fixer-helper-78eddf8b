@@ -11,6 +11,7 @@ import RequestDetailsDialog from '@/components/employee/RequestDetailsDialog';
 import DeclineReasonDialog from '@/components/employee/DeclineReasonDialog';
 import EmployeeSettingsMenu from '@/components/employee/EmployeeSettingsMenu';
 import EmployeePriceAdjustDialog from '@/components/employee/EmployeePriceAdjustDialog';
+import ExitConfirmDialog from '@/components/dashboard/ExitConfirmDialog';
 
 const EmployeeDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const EmployeeDashboard: React.FC = () => {
   const [showPriceAdjust, setShowPriceAdjust] = useState(false);
   const [currentPriceQuote, setCurrentPriceQuote] = useState<number>(0);
   const [employeeLocation, setEmployeeLocation] = useState({ lat: 42.695, lng: 23.325 });
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   
   // Demo: Generate random requests
   useEffect(() => {
@@ -59,6 +61,41 @@ const EmployeeDashboard: React.FC = () => {
     
     return () => clearTimeout(timer);
   }, [isAuthenticated, navigate, t]);
+
+  // Handle browser back button - only show exit dialog if no modals are open
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      event.preventDefault();
+      
+      // Check if any modal/dialog is currently open
+      const hasOpenModal = selectedRequest || showDeclineDialog || showSettings || 
+                          showPriceAdjust || showExitConfirm;
+      
+      if (hasOpenModal) {
+        // Close the currently open modal/dialog instead of showing exit dialog
+        setSelectedRequest(null);
+        setShowDeclineDialog(false);
+        setShowSettings(false);
+        setShowPriceAdjust(false);
+        setShowExitConfirm(false);
+        setDeclineReason('');
+      } else {
+        // Only show exit dialog if we're on the main dashboard with no modals open
+        setShowExitConfirm(true);
+      }
+      
+      // Push the current state back to prevent actual navigation
+      window.history.pushState(null, '', window.location.pathname);
+    };
+
+    // Push initial state
+    window.history.pushState(null, '', window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [selectedRequest, showDeclineDialog, showSettings, showPriceAdjust, showExitConfirm]);
   
   const handleRequestSelect = (request: ServiceRequest) => {
     setSelectedRequest(request);
@@ -180,6 +217,12 @@ const EmployeeDashboard: React.FC = () => {
         onClose={() => setShowSettings(false)}
         onLanguageChange={setLanguage}
         currentLanguage={language}
+      />
+
+      <ExitConfirmDialog
+        open={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        onLogout={handleLogout}
       />
     </div>
   );

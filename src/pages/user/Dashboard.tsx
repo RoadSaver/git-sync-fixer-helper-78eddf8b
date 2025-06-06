@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -31,11 +30,29 @@ const Dashboard: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Handle browser back button
+  // Handle browser back button - only show exit dialog if no modals are open
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       event.preventDefault();
-      setShowExitConfirm(true);
+      
+      // Check if any modal/dialog is currently open
+      const hasOpenModal = selectedService || showEmergencyServices || showSettings || 
+                          showLocationPicker || showOngoingRequests || showExitConfirm;
+      
+      if (hasOpenModal) {
+        // Close the currently open modal/dialog instead of showing exit dialog
+        setSelectedService(null);
+        setShowEmergencyServices(false);
+        setShowSettings(false);
+        setShowLocationPicker(false);
+        setShowOngoingRequests(false);
+        setShowExitConfirm(false);
+        setShouldShowPriceQuote(false);
+      } else {
+        // Only show exit dialog if we're on the main dashboard with no modals open
+        setShowExitConfirm(true);
+      }
+      
       // Push the current state back to prevent actual navigation
       window.history.pushState(null, '', window.location.pathname);
     };
@@ -47,7 +64,7 @@ const Dashboard: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, []);
+  }, [selectedService, showEmergencyServices, showSettings, showLocationPicker, showOngoingRequests, showExitConfirm]);
   
   const handleServiceSelect = (service: ServiceType) => {
     console.log('Service selected:', service);
