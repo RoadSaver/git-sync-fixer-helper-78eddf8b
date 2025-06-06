@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +14,7 @@ interface UserAccount {
   email: string;
   phone_number?: string;
   gender?: string;
+  full_name?: string;
   created_at: string;
   created_by_admin?: boolean;
 }
@@ -107,6 +107,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Name</TableHead>
                   <TableHead>Username</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
@@ -120,6 +121,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ onBack }) => {
               <TableBody>
                 {users.map((user) => (
                   <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.phone_number || 'N/A'}</TableCell>

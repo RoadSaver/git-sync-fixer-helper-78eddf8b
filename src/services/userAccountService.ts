@@ -22,6 +22,11 @@ export interface AdminCreateUserAccount {
   password: string;
   phone_number?: string;
   gender?: string;
+  name?: string;
+  secretQuestion1?: string;
+  secretAnswer1?: string;
+  secretQuestion2?: string;
+  secretAnswer2?: string;
 }
 
 export class UserAccountService {
@@ -64,16 +69,35 @@ export class UserAccountService {
       const saltRounds = 10;
       const password_hash = await bcrypt.hash(userData.password, saltRounds);
 
+      // Prepare the user data for insertion
+      const userInsertData: any = {
+        username: userData.username.toLowerCase(), // Ensure lowercase
+        email: userData.email,
+        password_hash,
+        phone_number: userData.phone_number,
+        gender: userData.gender,
+        created_by_admin: true
+      };
+
+      // Add name if provided
+      if (userData.name) {
+        userInsertData.full_name = userData.name;
+      }
+
+      // Add secret questions if provided
+      if (userData.secretQuestion1 && userData.secretAnswer1) {
+        userInsertData.secret_question_1 = userData.secretQuestion1;
+        userInsertData.secret_answer_1 = userData.secretAnswer1;
+      }
+
+      if (userData.secretQuestion2 && userData.secretAnswer2) {
+        userInsertData.secret_question_2 = userData.secretQuestion2;
+        userInsertData.secret_answer_2 = userData.secretAnswer2;
+      }
+
       const { data, error } = await supabase
         .from('existing_user_accounts')
-        .insert({
-          username: userData.username.toLowerCase(), // Ensure lowercase
-          email: userData.email,
-          password_hash,
-          phone_number: userData.phone_number,
-          gender: userData.gender,
-          created_by_admin: true
-        })
+        .insert(userInsertData)
         .select()
         .single();
 
