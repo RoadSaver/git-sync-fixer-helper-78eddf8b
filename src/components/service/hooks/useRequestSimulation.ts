@@ -35,24 +35,42 @@ export const useRequestSimulation = () => {
         setDeclineReason('No available employees. Please try again later.');
         setShowRealTimeUpdate(false);
         setCurrentEmployeeName('');
-        toast({
-          title: "No employees available",
-          description: "All employees are currently busy. Please try again later.",
-          variant: "destructive"
-        });
         return;
       }
 
       console.log('Employee assigned:', employee.full_name);
       setCurrentEmployeeName(employee.full_name);
 
-      // Simulate employee response delay
+      // Simulate employee response delay (2-5 seconds)
       setTimeout(() => {
-        const basePrice = 50;
-        const randomPrice = Math.floor(Math.random() * 100) + basePrice;
+        // Generate base price based on service type
+        let basePrice = 50;
+        switch (type) {
+          case 'flat-tyre':
+            basePrice = 40;
+            break;
+          case 'out-of-fuel':
+            basePrice = 30;
+            break;
+          case 'car-battery':
+            basePrice = 60;
+            break;
+          case 'tow-truck':
+            basePrice = 100;
+            break;
+          case 'emergency':
+            basePrice = 80;
+            break;
+          default:
+            basePrice = 50;
+        }
         
-        console.log('Employee sent quote:', randomPrice);
-        onQuoteReceived(randomPrice);
+        // Add small random variation
+        const randomPrice = basePrice + Math.floor(Math.random() * 20) - 10;
+        const finalPrice = Math.max(20, randomPrice); // Minimum 20 BGN
+        
+        console.log('Employee sent quote:', finalPrice);
+        onQuoteReceived(finalPrice);
         
         // Set employee location near user
         const employeeLocation = {
@@ -60,9 +78,6 @@ export const useRequestSimulation = () => {
           lng: userLocation.lng + (Math.random() - 0.5) * 0.02
         };
         setEmployeeLocation(employeeLocation);
-        
-        setShowRealTimeUpdate(false);
-        setShowPriceQuote(true);
       }, 2000 + Math.random() * 3000); // 2-5 seconds delay
       
     } catch (error) {
@@ -70,36 +85,7 @@ export const useRequestSimulation = () => {
       setStatus('declined');
       setDeclineReason('Error finding available employees. Please try again.');
       setShowRealTimeUpdate(false);
-    }
-  };
-
-  const handleDecline = async (
-    requestId: string,
-    employeeName: string,
-    userId: string,
-    userLocation: { lat: number; lng: number },
-    reason: string = 'User declined quote twice'
-  ) => {
-    if (!user) return;
-    
-    try {
-      await UserHistoryService.addHistoryEntry({
-        user_id: userId,
-        username: userId,
-        service_type: 'towing', // This should be passed as parameter
-        status: 'declined',
-        employee_name: employeeName,
-        request_date: new Date().toISOString(),
-        completion_date: new Date().toISOString(),
-        address_street: 'Sofia Center, Bulgaria',
-        latitude: userLocation.lat,
-        longitude: userLocation.lng,
-        decline_reason: reason
-      });
-      
-      console.log('Decline recorded for employee:', employeeName);
-    } catch (error) {
-      console.error('Error recording decline:', error);
+      setCurrentEmployeeName('');
     }
   };
 
@@ -113,8 +99,7 @@ export const useRequestSimulation = () => {
     etaSeconds: number,
     onEtaUpdate: (remaining: number) => void,
     onLocationUpdate: (location: { lat: number; lng: number }) => void,
-    onCompletion: () => void,
-    onClose?: () => void
+    onCompletion: () => void
   ) => {
     if (!user) return;
     
@@ -131,7 +116,7 @@ export const useRequestSimulation = () => {
       }
     }, 1000);
 
-    // Simulate employee movement
+    // Simulate employee movement towards user
     let currentLocation = { ...employeeStartLocation };
     const totalSteps = etaSeconds / 2; // Update every 2 seconds
     let step = 0;
@@ -140,7 +125,7 @@ export const useRequestSimulation = () => {
       step++;
       const progress = step / totalSteps;
       
-      // Move employee closer to user
+      // Move employee closer to user location
       currentLocation = {
         lat: employeeStartLocation.lat + (userLocation.lat - employeeStartLocation.lat) * progress,
         lng: employeeStartLocation.lng + (userLocation.lng - employeeStartLocation.lng) * progress
@@ -151,41 +136,15 @@ export const useRequestSimulation = () => {
       if (step >= totalSteps) {
         clearInterval(movementInterval);
         
-        // Service completion
+        // Employee has arrived - wait 5 seconds then complete service
         setTimeout(async () => {
-          const serviceFee = 5;
-          const totalPrice = priceQuote + serviceFee;
-          
-          try {
-            // Add to user history
-            await UserHistoryService.addHistoryEntry({
-              user_id: userId,
-              username: userId,
-              service_type: 'towing', // This should be passed as parameter
-              status: 'completed',
-              employee_name: employeeName,
-              price_paid: priceQuote,
-              service_fee: serviceFee,
-              total_price: totalPrice,
-              request_date: new Date().toISOString(),
-              completion_date: new Date().toISOString(),
-              address_street: 'Sofia Center, Bulgaria',
-              latitude: userLocation.lat,
-              longitude: userLocation.lng
-            });
-            
-            console.log('Service completed and recorded');
-            onCompletion();
-            
-          } catch (error) {
-            console.error('Error recording completion:', error);
-            onCompletion(); // Still complete the UI flow
-          }
-        }, 3000); // 3 seconds after arrival
+          console.log('Service completed');
+          onCompletion();
+        }, 5000); // 5 second delay after arrival
       }
     }, 2000); // Update every 2 seconds
     
-    // Cleanup after maximum time
+    // Cleanup intervals after maximum time
     setTimeout(() => {
       clearInterval(etaInterval);
       clearInterval(movementInterval);
@@ -194,7 +153,6 @@ export const useRequestSimulation = () => {
 
   return {
     simulateEmployeeResponse,
-    handleDecline,
     handleAccept
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -20,6 +21,7 @@ interface PriceQuoteDialogProps {
   onCancelRequest: () => void;
   hasDeclinedOnce?: boolean;
   employeeName?: string;
+  showWaitingForRevision?: boolean;
 }
 
 const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
@@ -31,13 +33,20 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
   onDecline,
   onCancelRequest,
   hasDeclinedOnce = false,
-  employeeName // do not default to 'Employee', always require prop
+  employeeName = '',
+  showWaitingForRevision = false
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
-  const [isWaitingForRevision, setIsWaitingForRevision] = useState(false);
 
-  console.log('PriceQuoteDialog props:', { open, serviceType, priceQuote, employeeName, hasDeclinedOnce });
+  console.log('PriceQuoteDialog props:', { 
+    open, 
+    serviceType, 
+    priceQuote, 
+    employeeName, 
+    hasDeclinedOnce,
+    showWaitingForRevision 
+  });
 
   const handleCancelRequest = () => {
     console.log('handleCancelRequest called');
@@ -52,30 +61,19 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
   };
 
   const handleDecline = () => {
-    // Always call onDecline with correct flag
     if (!hasDeclinedOnce) {
+      // First decline - show confirmation
       setShowDeclineConfirm(true);
     } else {
-      // Second decline - assign new employee, keep request active
-      onDecline(true); // This triggers the ServiceRequestLogic flow for new assignment
+      // Second decline - direct decline (blacklist employee)
+      onDecline(true);
     }
   };
 
   const confirmDecline = () => {
-    console.log('confirmDecline called');
+    console.log('confirmDecline called - first decline');
     setShowDeclineConfirm(false);
-    setIsWaitingForRevision(true);
-    
-    // Every employee gets exactly one chance to send a revised quote
-    setTimeout(() => {
-      // Generate a revised quote (employee always sends one)
-      const revisedQuote = Math.max(10, priceQuote - Math.floor(Math.random() * 20) - 5);
-      setIsWaitingForRevision(false);
-      // In a real implementation, this would update the parent component's state with the revised quote
-      console.log('Employee sent revised quote:', revisedQuote);
-      // For now, we'll just proceed with the decline since we don't have the revised quote flow implemented
-      onDecline();
-    }, 3000);
+    onDecline(false); // First decline
   };
 
   const handleAccept = () => {
@@ -83,14 +81,15 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     onAccept();
   };
 
-  // Allow dialog to close when clicking outside or pressing escape - this will keep the request active
+  // Allow dialog to close when clicking outside or pressing escape
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      onClose(); // This will close the dialog but keep the ongoing request active
+      onClose();
     }
   };
 
-  if (isWaitingForRevision) {
+  // Show waiting for revision dialog
+  if (showWaitingForRevision) {
     return (
       <WaitingForRevisionDialog
         open={open}
@@ -121,6 +120,7 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
           />
         </DialogContent>
       </Dialog>
+      
       <DeclineConfirmDialog
         open={showDeclineConfirm}
         onOpenChange={setShowDeclineConfirm}
@@ -128,6 +128,7 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
         onConfirm={confirmDecline}
         onCancel={() => setShowDeclineConfirm(false)}
       />
+      
       <CancelConfirmDialog
         open={showCancelConfirm}
         onOpenChange={setShowCancelConfirm}

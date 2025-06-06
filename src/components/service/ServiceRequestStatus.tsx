@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
@@ -18,6 +19,7 @@ interface ServiceRequestStatusProps {
   hasStoredSnapshot?: boolean;
   onShowStoredPriceQuote?: () => void;
   eta?: string | null;
+  employeeName?: string;
 }
 
 const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
@@ -33,6 +35,7 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
   hasStoredSnapshot = false,
   onShowStoredPriceQuote,
   eta,
+  employeeName = ''
 }) => {
   const { language } = useApp();
   const t = useTranslation(language);
@@ -74,6 +77,15 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
             {status.charAt(0).toUpperCase() + status.slice(1)}
           </div>
         </div>
+        
+        {/* Employee information */}
+        {employeeName && status !== 'declined' && (
+          <div className="mt-2">
+            <p className="text-sm text-muted-foreground">
+              Assigned Employee: <span className="font-medium">{employeeName}</span>
+            </p>
+          </div>
+        )}
         
         {/* Review Price Quote buttons */}
         <div className="mt-4 space-y-2">
@@ -120,12 +132,14 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
             <span>Your location</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span>Employee location</span>
-          </div>
+          {employeeLocation && (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>{employeeName ? `${employeeName}'s location` : 'Employee location'}</span>
+            </div>
+          )}
           {/* Show ETA if available */}
-          {employeeLocation && eta && (
+          {employeeLocation && eta && status === 'accepted' && (
             <div className="flex items-center gap-2">
               <span className="font-semibold text-blue-700">ETA:</span>
               <span>{eta}</span>
@@ -137,7 +151,7 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
       {/* Status-specific content */}
       {status === 'declined' && declineReason && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="font-semibold text-red-800 mb-2">Decline Reason</h3>
+          <h3 className="font-semibold text-red-800 mb-2">Service Unavailable</h3>
           <p className="text-sm text-red-700">{declineReason}</p>
         </div>
       )}
@@ -146,7 +160,7 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <h3 className="font-semibold text-green-800 mb-2">Service Accepted</h3>
           <p className="text-sm text-green-700">
-            Your request has been accepted! Our employee will be at your location shortly.
+            {employeeName} has accepted your request and is on the way to your location.
           </p>
         </div>
       )}
