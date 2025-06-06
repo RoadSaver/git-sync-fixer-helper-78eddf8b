@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useApp } from '@/contexts/AppContext';
@@ -189,7 +190,7 @@ export const useServiceRequest = (
     handleSubmit,
     handleAcceptQuote: () => {}, // Simplified for now
     handleDeclineQuote: () => {}, // Simplified for now
-    handleCancelRequest,
+    handleCancelRequest: cancelRequest,
     handleContactSupport,
     storedSnapshot,
     showStoredPriceQuote: () => {
