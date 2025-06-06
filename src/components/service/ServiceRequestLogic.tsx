@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useApp } from '@/contexts/AppContext';
@@ -8,8 +9,6 @@ import { useRequestSimulation } from './hooks/useRequestSimulation';
 import { useRequestActions } from './hooks/useRequestActions';
 import { usePriceQuoteSnapshot } from '@/hooks/usePriceQuoteSnapshot';
 import { UserHistoryService } from '@/services/userHistoryService';
-// --- Blacklist for simulated employees (in-memory, resets after request finishes) ---
-import { employeeSimulationBlacklist } from '@/hooks/employeeSimulationBlacklist';
 
 export const useServiceRequest = (
   type: ServiceType,
@@ -19,7 +18,6 @@ export const useServiceRequest = (
   const { validateMessage } = useServiceValidation();
   const { simulateEmployeeResponse, handleDecline, handleAccept } = useRequestSimulation();
   const {
-    handleAcceptQuote: acceptQuote,
     handleCancelRequest: cancelRequest,
     handleContactSupport
   } = useRequestActions();
@@ -37,9 +35,7 @@ export const useServiceRequest = (
   const [declineReason, setDeclineReason] = useState('');
   const [currentEmployeeName, setCurrentEmployeeName] = useState<string>('');
   const [hasDeclinedOnce, setHasDeclinedOnce] = useState(false);
-  // Track decline count per employee per request
   const [employeeDeclineCounts, setEmployeeDeclineCounts] = useState<{ [employee: string]: number }>({});
-  // Add state for employee movement and ETA
   const [employeeMovingLocation, setEmployeeMovingLocation] = useState<{ lat: number; lng: number } | undefined>(undefined);
   const [eta, setEta] = useState<string | null>(null);
   const [sessionEmployeeBlacklist, setSessionEmployeeBlacklist] = useState<string[]>([]);
@@ -113,7 +109,7 @@ export const useServiceRequest = (
       setOngoingRequest(newOngoingRequest);
       setStatus('pending');
       setIsSubmitting(false);
-      setShowRealTimeUpdate(false); // Do not show the intermediate status screen
+      setShowRealTimeUpdate(false);
       toast({
         title: "Request Sent",
         description: "Your request has been sent to our team."
@@ -136,7 +132,7 @@ export const useServiceRequest = (
               employeeName: employeeName
             };
           });
-          setShowPriceQuote(true); // Show price quote dialog immediately
+          setShowPriceQuote(true);
         },
         setShowPriceQuote,
         setShowRealTimeUpdate,
@@ -144,7 +140,6 @@ export const useServiceRequest = (
         setDeclineReason,
         setEmployeeLocation,
         (employeeName: string) => {
-          // Only assign valid employee names from Supabase
           if (employeeName && employeeName !== 'Unknown') {
             setCurrentEmployeeName(employeeName);
             setOngoingRequest(prev => prev ? {
@@ -176,19 +171,18 @@ export const useServiceRequest = (
 
   const handleAcceptQuote = async () => {
     if (!user || !ongoingRequest) return;
-    // Start ETA and completion simulation using handleAccept
+    
     handleAccept(
       ongoingRequest.id,
       ongoingRequest.priceQuote || priceQuote,
       currentEmployeeName,
       user.username,
       userLocation,
-      // Simulate employee starting from a random nearby location
       {
         lat: userLocation.lat + (Math.random() - 0.5) * 0.02,
         lng: userLocation.lng + (Math.random() - 0.5) * 0.02
       },
-      15, // ETA in seconds (example: 15s)
+      15,
       (remaining) => {
         setEta(remaining > 0 ? `00:00:${remaining.toString().padStart(2, '0')}` : '00:00:00');
       },
@@ -196,7 +190,6 @@ export const useServiceRequest = (
         setEmployeeMovingLocation(loc);
       },
       () => {
-        // On completion, show toast and update state
         toast({
           title: "Service Completed",
           description: `Your ${type} service has been completed successfully.`
@@ -205,12 +198,9 @@ export const useServiceRequest = (
         setShowRealTimeUpdate(false);
         setEmployeeMovingLocation(undefined);
         setEta(null);
-      },
-      () => {
-        // On windows close, can be used to close dialogs if needed
       }
     );
-    // UI state for accepted
+    
     setShowPriceQuote(false);
     setShowRealTimeUpdate(true);
     setStatus('accepted');
@@ -221,61 +211,16 @@ export const useServiceRequest = (
     });
   };
 
-  // --- EMPLOYEE MOVEMENT ---
-  // Simulate employee movement toward user after quote is accepted
-  const simulateEmployeeMovement = () => {
-    let intervalId: NodeJS.Timeout;
-    let timeoutId: NodeJS.Timeout;
-
-    setEmployeeLocation(prev => {
-      if (!prev) {
-        // Set initial employee location (random nearby location)
-        const initialLat = userLocation.lat + (Math.random() - 0.5) * 0.02;
-        const initialLng = userLocation.lng + (Math.random() - 0.5) * 0.02;
-        setEta(calculateEta({ lat: initialLat, lng: initialLng }, userLocation));
-        return { lat: initialLat, lng: initialLng };
-      }
-      setEta(calculateEta(prev, userLocation));
-      return prev;
-    });
-
-    intervalId = setInterval(() => {
-      setEmployeeLocation(prev => {
-        if (!prev) return prev;
-        const deltaLat = userLocation.lat - prev.lat;
-        const deltaLng = userLocation.lng - prev.lng;
-        const distance = Math.sqrt(deltaLat * deltaLat + deltaLng * deltaLng);
-        // If close enough, stop moving
-        if (distance < 0.0005) {
-          clearInterval(intervalId);
-          setEta('00:00:00');
-          return { ...userLocation };
-        }
-        // Move 10% closer each time
-        const next = {
-          lat: prev.lat + deltaLat * 0.1,
-          lng: prev.lng + deltaLng * 0.1
-        };
-        setEta(calculateEta(next, userLocation));
-        return next;
-      });
-    }, 2000); // update every 2 seconds for smoother movement
-
-    timeoutId = setTimeout(() => clearInterval(intervalId), 60000);
-  };
-  
-  // Track declines per employee
-  const [employeeDeclineCount, setEmployeeDeclineCount] = useState<{ [employee: string]: number }>({});
-
   const handleDeclineQuote = async (isSecondDecline: boolean = false) => {
     if (!user) return;
-    const declines = (employeeDeclineCount[currentEmployeeName] || 0) + 1;
-    setEmployeeDeclineCount(prev => ({
+    
+    const declines = (employeeDeclineCounts[currentEmployeeName] || 0) + 1;
+    setEmployeeDeclineCounts(prev => ({
       ...prev,
       [currentEmployeeName]: declines
     }));
+    
     if (declines >= 2 || isSecondDecline || hasDeclinedOnce) {
-      // Add to blacklist in state (deduped)
       setSessionEmployeeBlacklist(prev => Array.from(new Set([...prev, currentEmployeeName])));
       await UserHistoryService.addHistoryEntry({
         user_id: user.username,
@@ -291,7 +236,7 @@ export const useServiceRequest = (
         decline_reason: 'User declined quote twice'
       });
       setHasDeclinedOnce(false);
-      setEmployeeDeclineCount(prev => ({
+      setEmployeeDeclineCounts(prev => ({
         ...prev,
         [currentEmployeeName]: 0
       }));
@@ -311,13 +256,11 @@ export const useServiceRequest = (
       setTimeout(() => {
         const requestId = Date.now().toString();
         const timestamp = new Date().toISOString();
-        // Always use the latest blacklist
         simulateEmployeeResponse(
           requestId,
           timestamp,
           type,
           userLocation,
-          // Do not change price quote here
           () => {},
           (show) => setShowPriceQuote(show),
           setShowRealTimeUpdate,
@@ -334,7 +277,7 @@ export const useServiceRequest = (
               setShowPriceQuote(true);
             }, 100);
           },
-          [...sessionEmployeeBlacklist, currentEmployeeName] // always up-to-date
+          [...sessionEmployeeBlacklist, currentEmployeeName]
         );
       }, 2000);
     } else {
@@ -344,7 +287,6 @@ export const useServiceRequest = (
         description: `${currentEmployeeName} will send you a revised quote.`
       });
       setTimeout(() => {
-        // Only change price on decline
         const revisedQuote = Math.max(10, priceQuote - Math.floor(Math.random() * 15) - 5);
         setPriceQuote(revisedQuote);
         setOngoingRequest(prev => prev ? {
@@ -360,7 +302,6 @@ export const useServiceRequest = (
   };
   
   const handleCancelRequest = () => {
-    // Reset blacklist if request is cancelled
     setSessionEmployeeBlacklist([]);
     cancelRequest(setShowPriceQuote);
   };

@@ -215,6 +215,54 @@ export type Database = {
         }
         Relationships: []
       }
+      simulated_employee_history: {
+        Row: {
+          created_at: string
+          id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          bulgarian_text: string
+          category: string | null
+          context: string | null
+          created_at: string
+          english_text: string
+          id: string
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          bulgarian_text: string
+          category?: string | null
+          context?: string | null
+          created_at?: string
+          english_text: string
+          id?: string
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          bulgarian_text?: string
+          category?: string | null
+          context?: string | null
+          created_at?: string
+          english_text?: string
+          id?: string
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_finished_requests: {
         Row: {
           created_at: string | null

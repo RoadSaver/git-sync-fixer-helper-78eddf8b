@@ -1,3 +1,4 @@
+
 import { defineConfig, type ViteDevServer } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -10,7 +11,7 @@ function printExternalLink() {
     configureServer(server: ViteDevServer) {
       server.httpServer?.once('listening', () => {
         const address = '37.63.102.216';
-        const port = server.config.server.port || 5000;
+        const port = server.config.server.port || 8080;
         // eslint-disable-next-line no-console
         console.log(`\u001b[32m\nApp is accessible externally at: http://${address}:${port}\n\u001b[0m`);
       });
@@ -21,8 +22,8 @@ function printExternalLink() {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: '0.0.0.0', // Allow external and local access
-    port: 5000,      // Use port 5000 for both
+    host: '0.0.0.0',
+    port: 8080,
   },
   plugins: [
     react(),
