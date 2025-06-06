@@ -43,8 +43,8 @@ export const useRequestSimulation = () => {
         return;
       }
 
-      console.log('Employee assigned:', employee.employee_name);
-      setCurrentEmployeeName(employee.employee_name);
+      console.log('Employee assigned:', employee.full_name);
+      setCurrentEmployeeName(employee.full_name);
 
       // Simulate employee response delay
       setTimeout(() => {

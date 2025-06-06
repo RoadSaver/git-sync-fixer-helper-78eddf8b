@@ -57,7 +57,7 @@ const RegisterFormFieldInput: React.FC<RegisterFormFieldInputProps> = ({
       <Label htmlFor={id} className="flex items-center">
         {label}
         {showInfoIcon && (
-          <InfoIcon title={infoTitle} content={infoContent} />
+          <InfoIcon titleKey={infoTitle} contentKey={infoContent} />
         )}
       </Label>
       {helperText && <p className="text-xs text-muted-foreground">{helperText}</p>}
