@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useApp } from '@/contexts/AppContext';
@@ -190,7 +191,7 @@ export const useServiceRequest = (
       description: `${currentEmployeeName} is on the way to your location.`
     });
 
-    // Start the simulation with movement and ETA
+    // Start the simulation with movement and ETA (15 seconds)
     await handleAccept(
       ongoingRequest.id,
       ongoingRequest.priceQuote || priceQuote,
@@ -198,7 +199,7 @@ export const useServiceRequest = (
       user.username,
       userLocation,
       employeeStartLocation,
-      60, // 60 seconds ETA
+      15, // 15 seconds ETA
       (remaining) => {
         const minutes = Math.floor(remaining / 60);
         const seconds = remaining % 60;
@@ -235,14 +236,18 @@ export const useServiceRequest = (
           console.error('Error recording completion:', error);
         }
         
-        // Clean up state
+        // Clean up state and close all windows
         setOngoingRequest(null);
         setShowRealTimeUpdate(false);
+        setShowPriceQuote(false);
         setEmployeeMovingLocation(undefined);
         setEta(null);
         setSessionEmployeeBlacklist([]);
         setEmployeeDeclineCounts({});
         setHasDeclinedOnce(false);
+        
+        // Navigate back to services screen by closing all dialogs
+        // This will be handled by the parent component
       }
     );
   };

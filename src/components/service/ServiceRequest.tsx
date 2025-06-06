@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ServiceRequestDialog from './ServiceRequestDialog';
 import ServiceRequestForm from './ServiceRequestForm';
@@ -42,6 +43,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
     currentEmployeeName,
     hasDeclinedOnce,
     eta,
+    showWaitingForRevision,
     handleSubmit,
     handleAcceptQuote,
     handleDeclineQuote,
@@ -67,6 +69,13 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
       }
     }
   }, [open, ongoingRequest, shouldShowPriceQuote, setShowPriceQuote]);
+
+  // Close dialog when no ongoing request exists (service completed)
+  useEffect(() => {
+    if (!ongoingRequest && open) {
+      onClose();
+    }
+  }, [ongoingRequest, open, onClose]);
 
   const handleAttemptClose = () => {
     // If price quote is showing, just close the dialog but keep the request in price quote state
@@ -113,7 +122,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
     <>
       <ServiceRequestDialog
         type={type}
-        open={open && !showPriceQuote}
+        open={open && !showPriceQuote && !showWaitingForRevision}
         onClose={handleAttemptClose}
         showRealTimeUpdate={showRealTimeUpdate}
       >
@@ -135,6 +144,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
             userLocation={userLocation}
             employeeLocation={employeeLocation}
             eta={eta}
+            employeeName={actualEmployeeName}
             onContactSupport={handleContactSupport}
             onClose={handleAttemptClose}
             onReviewPriceQuote={handleReviewPriceQuote}
@@ -155,6 +165,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
         onCancelRequest={handleCancelRequest}
         hasDeclinedOnce={hasDeclinedOnce}
         employeeName={actualEmployeeName}
+        showWaitingForRevision={showWaitingForRevision}
       />
 
       {showCancelConfirmDialog && (

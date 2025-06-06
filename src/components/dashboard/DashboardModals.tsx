@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import ServiceRequest from '@/components/service/ServiceRequest';
@@ -49,6 +50,18 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
   onReviewPriceQuote,
   shouldShowPriceQuote = false
 }) => {
+  const handleViewRequest = () => {
+    // Close ongoing requests dialog and open the service request status
+    onOngoingRequestsClose();
+    onViewRequest();
+  };
+
+  const handleReviewPriceQuote = () => {
+    // Close ongoing requests dialog and open the price quote
+    onOngoingRequestsClose();
+    onReviewPriceQuote();
+  };
+
   return (
     <>
       {/* Service Request Modal */}
@@ -85,8 +98,8 @@ const DashboardModals: React.FC<DashboardModalsProps> = ({
         <OngoingRequestsDialog
           open={showOngoingRequests}
           onClose={onOngoingRequestsClose}
-          onViewRequest={onViewRequest}
-          onReviewPriceQuote={onReviewPriceQuote}
+          onViewRequest={handleViewRequest}
+          onReviewPriceQuote={handleReviewPriceQuote}
         />
       )}
       

@@ -29,9 +29,9 @@ const WaitingForRevisionDialog: React.FC<WaitingForRevisionDialogProps> = ({
         </DialogHeader>
         
         <div className="space-y-4 text-center py-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-sm text-gray-600">
-            {employeeName} is preparing a revised quote for you...
+            {employeeName ? `${employeeName} is sending a revised price quote` : 'Employee is preparing a revised quote for you...'}
           </p>
         </div>
         
