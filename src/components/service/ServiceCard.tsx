@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { useApp } from '@/contexts/AppContext';
@@ -35,9 +36,11 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   }, [type]);
   
   const handleClick = () => {
+    console.log('ServiceCard clicked:', type);
     if (type === 'support') {
       setShowContactDialog(true);
     } else {
+      console.log('Calling onClick for service:', type);
       onClick();
     }
   };

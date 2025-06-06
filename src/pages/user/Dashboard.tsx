@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/contexts/AppContext';
@@ -49,6 +50,8 @@ const Dashboard: React.FC = () => {
   }, []);
   
   const handleServiceSelect = (service: ServiceType) => {
+    console.log('Service selected:', service);
+    
     // Check if there's an ongoing request
     if (ongoingRequest) {
       toast({
@@ -62,14 +65,18 @@ const Dashboard: React.FC = () => {
     if (service === 'emergency') {
       setShowEmergencyServices(true);
     } else if (service === 'support') {
-      // Contact support is now handled in ServiceCard
+      // Contact support is handled in ServiceCard
       return;
     } else {
+      // For all other services, open the service request dialog
+      console.log('Setting selected service:', service);
       setSelectedService(service);
+      setShouldShowPriceQuote(false);
     }
   };
   
   const handleRequestClose = () => {
+    console.log('Closing service request');
     setSelectedService(null);
     setShouldShowPriceQuote(false);
   };
@@ -108,6 +115,8 @@ const Dashboard: React.FC = () => {
       // This will be handled by the ServiceRequest component
     }
   }, [selectedService, shouldShowPriceQuote]);
+
+  console.log('Dashboard render - selectedService:', selectedService);
   
   return (
     <div className="min-h-screen bg-background pb-16 font-clash">
