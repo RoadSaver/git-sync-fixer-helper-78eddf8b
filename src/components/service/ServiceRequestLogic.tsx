@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useApp } from '@/contexts/AppContext';
@@ -16,7 +15,7 @@ export const useServiceRequest = (
 ) => {
   const { setOngoingRequest, ongoingRequest, user } = useApp();
   const { validateMessage } = useServiceValidation();
-  const { simulateEmployeeResponse, handleDecline, handleAccept } = useRequestSimulation();
+  const { simulateEmployeeResponse, handleAccept } = useRequestSimulation();
   const {
     handleCancelRequest: cancelRequest,
     handleContactSupport
