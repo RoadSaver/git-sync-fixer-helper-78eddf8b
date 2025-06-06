@@ -70,12 +70,13 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
     }
   }, [open, ongoingRequest, shouldShowPriceQuote, setShowPriceQuote]);
 
-  // Close dialog when no ongoing request exists (service completed)
+  // Only close dialog when service is completed (not when there's no ongoing request)
   useEffect(() => {
-    if (!ongoingRequest && open) {
+    if (ongoingRequest === null && status === 'accepted' && open) {
+      // Service was completed, close the dialog
       onClose();
     }
-  }, [ongoingRequest, open, onClose]);
+  }, [ongoingRequest, status, open, onClose]);
 
   const handleAttemptClose = () => {
     // If price quote is showing, just close the dialog but keep the request in price quote state
