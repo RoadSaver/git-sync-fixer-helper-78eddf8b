@@ -117,7 +117,6 @@ export type Database = {
           secret_answer_2: string | null
           secret_question_1: string | null
           secret_question_2: string | null
-          status: string | null
           username: string
         }
         Insert: {
@@ -135,7 +134,6 @@ export type Database = {
           secret_answer_2?: string | null
           secret_question_1?: string | null
           secret_question_2?: string | null
-          status?: string | null
           username: string
         }
         Update: {
@@ -153,7 +151,6 @@ export type Database = {
           secret_answer_2?: string | null
           secret_question_1?: string | null
           secret_question_2?: string | null
-          status?: string | null
           username?: string
         }
         Relationships: []
@@ -253,21 +250,21 @@ export type Database = {
       }
       simulated_employees_blacklist: {
         Row: {
-          created_at: string
+          created_at: string | null
           employee_name: string
           id: string
           request_id: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           employee_name: string
           id?: string
           request_id: string
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           employee_name?: string
           id?: string
           request_id?: string
@@ -409,13 +406,20 @@ export type Database = {
     }
     Functions: {
       create_employee_account: {
-        Args: {
-          p_username: string
-          p_email: string
-          p_phone_number?: string
-          p_employee_role?: string
-          p_real_name?: string
-        }
+        Args:
+          | {
+              p_username: string
+              p_email: string
+              p_phone_number?: string
+              p_employee_role?: string
+            }
+          | {
+              p_username: string
+              p_email: string
+              p_phone_number?: string
+              p_employee_role?: string
+              p_real_name?: string
+            }
         Returns: string
       }
       migrate_new_user_to_existing: {
