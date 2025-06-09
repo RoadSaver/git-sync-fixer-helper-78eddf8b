@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,6 +41,8 @@ export const useEmployeeSimulation = () => {
     const availableEmployees = employees.filter(emp => 
       !excludedNames.includes(emp.full_name)
     );
+    
+    console.log('Available employees:', availableEmployees.length, 'Excluded:', excludedNames);
     
     if (availableEmployees.length === 0) {
       return null;

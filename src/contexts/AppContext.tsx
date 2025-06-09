@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/utils/translations';
+import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
 
 interface User {
   username: string;
@@ -15,8 +17,6 @@ interface OngoingRequest {
   timestamp: string;
   location: string;
   employeeLocation?: { lat: number; lng: number };
-  currentEmployeeName?: string;
-  declinedEmployees?: string[];
   employeeName?: string;
   employeePhone?: string;
   priceQuote?: number;
@@ -59,9 +59,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [language, setLanguageState] = useState<'en' | 'bg'>('en');
   const [userLocation, setUserLocationState] = useState(defaultLocation);
-  const [ongoingRequest, setOngoingRequestState] = useState<OngoingRequest | null>(null);
   const [requestHistory, setRequestHistory] = useState<CompletedRequest[]>([]);
   const [editMode, setEditMode] = useState(false);
+  
+  // Use the new service request manager
+  const { currentRequest } = useServiceRequestManager();
+  
+  // Convert service request manager state to ongoing request format
+  const ongoingRequest = useMemo((): OngoingRequest | null => {
+    if (!currentRequest) return null;
+    
+    const status = (() => {
+      switch (currentRequest.status) {
+        case 'finding_employee':
+        case 'quote_received':
+        case 'quote_declined':
+          return 'pending';
+        case 'quote_accepted':
+        case 'in_progress':
+          return 'accepted';
+        case 'cancelled':
+          return 'declined';
+        default:
+          return 'pending';
+      }
+    })();
+    
+    return {
+      id: currentRequest.id,
+      type: currentRequest.type,
+      status,
+      timestamp: new Date(currentRequest.createdAt).toLocaleString(),
+      location: 'Sofia Center, Bulgaria',
+      employeeLocation: currentRequest.assignedEmployee?.location,
+      employeeName: currentRequest.assignedEmployee?.name,
+      employeePhone: '+359 888 123 456', // Mock phone
+      priceQuote: currentRequest.currentQuote?.amount
+    };
+  }, [currentRequest]);
+  
+  // Dummy setOngoingRequest for compatibility
+  const setOngoingRequest = useMemo(() => (request: OngoingRequest | null | ((prev: OngoingRequest | null) => OngoingRequest | null)) => {
+    // This is now handled by the ServiceRequestManager
+    console.log('setOngoingRequest called - handled by ServiceRequestManager');
+  }, []);
   
   // Try to get user location on initial load
   useEffect(() => {
@@ -99,14 +140,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const setUserLocation = useMemo(() => (location: { lat: number; lng: number }) => {
     setUserLocationState(location);
-  }, []);
-  
-  const setOngoingRequest = useMemo(() => (request: OngoingRequest | null | ((prev: OngoingRequest | null) => OngoingRequest | null)) => {
-    if (typeof request === 'function') {
-      setOngoingRequestState(prev => request(prev));
-    } else {
-      setOngoingRequestState(request);
-    }
   }, []);
   
   const addToHistory = useMemo(() => (request: CompletedRequest) => {

@@ -4,7 +4,9 @@ import ServiceRequestDialog from './ServiceRequestDialog';
 import ServiceRequestForm from './ServiceRequestForm';
 import ServiceRequestStatus from './ServiceRequestStatus';
 import PriceQuoteDialog from './PriceQuoteDialog';
-import { useServiceRequest } from './ServiceRequestLogic';
+import { useServiceRequestManager } from '@/hooks/useServiceRequestManager';
+import { useServiceValidation } from './hooks/useServiceValidation';
+import { serviceMessages } from './constants/serviceMessages';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useApp } from '@/contexts/AppContext';
 import { useTranslation } from '@/utils/translations';
+import { toast } from "@/components/ui/use-toast";
 
 interface ServiceRequestProps {
   type: 'flat-tyre' | 'out-of-fuel' | 'other-car-problems' | 'tow-truck' | 'emergency' | 'support' | 'car-battery';
@@ -26,104 +29,153 @@ interface ServiceRequestProps {
   shouldShowPriceQuote?: boolean;
 }
 
-const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, userLocation, shouldShowPriceQuote = false }) => {
-  const { language, ongoingRequest } = useApp();
+const ServiceRequest: React.FC<ServiceRequestProps> = ({ 
+  type, 
+  open, 
+  onClose, 
+  userLocation, 
+  shouldShowPriceQuote = false 
+}) => {
+  const { language } = useApp();
   const t = useTranslation(language);
-  const {
-    message,
-    setMessage,
-    isSubmitting,
-    showRealTimeUpdate,
-    showPriceQuote,
-    setShowPriceQuote,
-    priceQuote,
-    employeeLocation,
-    status,
-    declineReason,
-    currentEmployeeName,
-    hasDeclinedOnce,
-    eta,
-    showWaitingForRevision,
-    handleSubmit,
-    handleAcceptQuote,
-    handleDeclineQuote,
-    handleCancelRequest,
-    handleContactSupport,
-    storedSnapshot,
-    showStoredPriceQuote
-  } = useServiceRequest(type, userLocation);
-
+  const { validateMessage } = useServiceValidation();
+  const { currentRequest, createRequest, acceptQuote, declineQuote, cancelRequest } = useServiceRequestManager();
+  
+  const [message, setMessage] = useState(() => serviceMessages[type] || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
-
-  // Get the actual price quote and employee name from ongoing request if available
-  // Use nullish coalescing (??) instead of logical OR (||) to properly handle 0 values
-  const actualPriceQuote = ongoingRequest?.priceQuote ?? priceQuote;
-  const actualEmployeeName = ongoingRequest?.employeeName ?? currentEmployeeName;
-
-  // Effect to automatically show price quote if there's an ongoing request with a pending status
-  // or if explicitly requested via shouldShowPriceQuote prop
+  const [showWaitingForRevision, setShowWaitingForRevision] = useState(false);
+  
+  // Handle showing price quote dialog
+  const showPriceQuote = currentRequest?.status === 'quote_received';
+  const showRealTimeUpdate = currentRequest?.status === 'finding_employee' || showWaitingForRevision;
+  
+  // Handle waiting for revision state
   useEffect(() => {
-    if (open && ongoingRequest && ongoingRequest.status === 'pending') {
-      if (shouldShowPriceQuote || (ongoingRequest.priceQuote !== undefined && ongoingRequest.priceQuote >= 0)) {
-        setShowPriceQuote(true);
-      }
+    if (currentRequest?.status === 'quote_declined' && !currentRequest.hasReceivedRevision) {
+      setShowWaitingForRevision(true);
+    } else {
+      setShowWaitingForRevision(false);
     }
-  }, [open, ongoingRequest, shouldShowPriceQuote, setShowPriceQuote]);
-
-  // Only close dialog when service is completed (not when there's no ongoing request)
+  }, [currentRequest?.status, currentRequest?.hasReceivedRevision]);
+  
+  // Auto-show price quote if requested
   useEffect(() => {
-    if (ongoingRequest === null && status === 'accepted' && open) {
-      // Service was completed, close the dialog
+    if (open && shouldShowPriceQuote && showPriceQuote) {
+      // Price quote dialog will be shown automatically
+    }
+  }, [open, shouldShowPriceQuote, showPriceQuote]);
+  
+  // Close dialog when service is completed
+  useEffect(() => {
+    if (currentRequest?.status === 'completed') {
       onClose();
     }
-  }, [ongoingRequest, status, open, onClose]);
-
+  }, [currentRequest?.status, onClose]);
+  
+  const handleSubmit = async () => {
+    if (!validateMessage(message, type)) {
+      return;
+    }
+    
+    if (currentRequest) {
+      toast({
+        title: "Request in Progress",
+        description: "Please wait for your current request to be completed before making a new one.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await createRequest(type, userLocation, message);
+      
+      toast({
+        title: "Request Sent",
+        description: "Your request has been sent to our team."
+      });
+    } catch (error) {
+      console.error('Error creating request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const handleAttemptClose = () => {
-    // If price quote is showing, just close the dialog but keep the request in price quote state
     if (showPriceQuote) {
       onClose();
       return;
     }
     
-    // Only show confirmation dialog for pending requests (not in price quote state)
-    if (status === 'pending') {
+    if (currentRequest && currentRequest.status !== 'completed' && currentRequest.status !== 'cancelled') {
       setShowCancelConfirmDialog(true);
     } else {
-      onClose(); // Close directly for accepted, declined, or initial state
+      onClose();
     }
   };
-
-  const confirmCancelRequest = () => {
-    onClose(); 
+  
+  const confirmCancelRequest = async () => {
+    await cancelRequest();
     setShowCancelConfirmDialog(false);
-  };
-
-  const handleDecline = (isSecondDecline: boolean = false) => {
-    // Use the hasDeclinedOnce from the centralized state
-    if (!hasDeclinedOnce && !isSecondDecline) {
-      // First decline - this will be handled by handleDeclineQuote
-      handleDeclineQuote(false);
-    } else {
-      // This is the second decline - call the special decline logic
-      handleDeclineQuote(true);
-    }
-  };
-
-  const handlePriceQuoteClose = () => {
-    // Close the price quote dialog but keep the ongoing request active in price quote state
-    // When user reopens from ongoing requests, they'll see the price quote again
     onClose();
   };
-
-  const handleReviewPriceQuote = () => {
-    setShowPriceQuote(true);
+  
+  const handleAcceptQuote = async () => {
+    await acceptQuote();
   };
-
+  
+  const handleDeclineQuote = async () => {
+    await declineQuote();
+  };
+  
+  const handleContactSupport = () => {
+    toast({
+      title: "Contacting Support",
+      description: "Our support team will contact you shortly."
+    });
+  };
+  
+  const getStatusForDisplay = () => {
+    if (!currentRequest) return 'pending';
+    
+    switch (currentRequest.status) {
+      case 'finding_employee':
+        return 'pending';
+      case 'quote_received':
+        return 'pending';
+      case 'quote_declined':
+        return 'pending';
+      case 'quote_accepted':
+      case 'in_progress':
+        return 'accepted';
+      case 'completed':
+        return 'accepted';
+      case 'cancelled':
+        return 'declined';
+      default:
+        return 'pending';
+    }
+  };
+  
+  const getDeclineReason = () => {
+    if (currentRequest?.status === 'cancelled') {
+      return 'Request was cancelled or no employees available.';
+    }
+    return '';
+  };
+  
   return (
     <>
       <ServiceRequestDialog
         type={type}
-        open={open && !showPriceQuote && !showWaitingForRevision}
+        open={open && !showPriceQuote}
         onClose={handleAttemptClose}
         showRealTimeUpdate={showRealTimeUpdate}
       >
@@ -140,34 +192,36 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({ type, open, onClose, us
         ) : (
           <ServiceRequestStatus
             message={message}
-            status={status}
-            declineReason={declineReason}
+            status={getStatusForDisplay()}
+            declineReason={getDeclineReason()}
             userLocation={userLocation}
-            employeeLocation={employeeLocation}
-            eta={eta}
-            employeeName={actualEmployeeName}
+            employeeLocation={currentRequest?.assignedEmployee?.location}
+            eta={currentRequest?.status === 'in_progress' ? '05:00' : null}
+            employeeName={currentRequest?.assignedEmployee?.name || ''}
             onContactSupport={handleContactSupport}
             onClose={handleAttemptClose}
-            onReviewPriceQuote={handleReviewPriceQuote}
-            hasPriceQuote={actualPriceQuote >= 0}
-            hasStoredSnapshot={!!storedSnapshot}
-            onShowStoredPriceQuote={showStoredPriceQuote}
+            onReviewPriceQuote={() => {}} // Not needed with new system
+            hasPriceQuote={!!currentRequest?.currentQuote}
+            hasStoredSnapshot={false}
+            onShowStoredPriceQuote={() => {}}
           />
         )}
       </ServiceRequestDialog>
 
-      <PriceQuoteDialog
-        open={showPriceQuote}
-        onClose={handlePriceQuoteClose}
-        serviceType={type}
-        priceQuote={actualPriceQuote}
-        onAccept={handleAcceptQuote}
-        onDecline={handleDecline}
-        onCancelRequest={handleCancelRequest}
-        hasDeclinedOnce={hasDeclinedOnce}
-        employeeName={actualEmployeeName}
-        showWaitingForRevision={showWaitingForRevision}
-      />
+      {showPriceQuote && currentRequest?.currentQuote && (
+        <PriceQuoteDialog
+          open={showPriceQuote}
+          onClose={onClose}
+          serviceType={type}
+          priceQuote={currentRequest.currentQuote.amount}
+          onAccept={handleAcceptQuote}
+          onDecline={handleDeclineQuote}
+          onCancelRequest={cancelRequest}
+          hasDeclinedOnce={currentRequest.declineCount > 0 || currentRequest.hasReceivedRevision}
+          employeeName={currentRequest.currentQuote.employeeName}
+          showWaitingForRevision={showWaitingForRevision}
+        />
+      )}
 
       {showCancelConfirmDialog && (
         <AlertDialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>

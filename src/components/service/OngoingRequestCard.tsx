@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +39,7 @@ const OngoingRequestCard: React.FC<OngoingRequestCardProps> = ({
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending': return t('finding-employee');
+      case 'pending': return ongoingRequest.priceQuote ? t('quote-received') : t('finding-employee');
       case 'accepted': return t('employee-on-way');
       case 'declined': return t('request-declined');
       default: return status;
