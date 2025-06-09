@@ -126,6 +126,7 @@ export const useServiceRequest = (
           
           await storeSnapshot(requestId, type, quote, currentEmployeeName, false);
           
+          // Update ongoing request with both quote and employee name
           setOngoingRequest(prev => {
             if (!prev) return null;
             const updated = {
@@ -362,11 +363,14 @@ export const useServiceRequest = (
           (quote: number) => {
             console.log('New quote from new employee:', currentEmployeeName, 'Amount:', quote);
             setPriceQuote(quote);
+            
+            // Update ongoing request with new employee info
             setOngoingRequest(prev => prev ? {
               ...prev,
               priceQuote: quote,
               employeeName: currentEmployeeName
             } : null);
+            
             setShowRealTimeUpdate(false);
             setShowPriceQuote(true);
           },
@@ -376,12 +380,15 @@ export const useServiceRequest = (
           setDeclineReason,
           setEmployeeLocation,
           (employeeName: string) => {
-            console.log('New employee assignment:', employeeName);
+            console.log('New employee assignment after decline:', employeeName);
             if (employeeName && employeeName !== 'Unknown') {
+              // Clear previous employee state completely
               setCurrentEmployeeName(employeeName);
               setAssignedEmployee(employeeName); // Assign new employee
               setEmployeeDeclineCount(0);
               setHasReceivedRevision(false);
+              
+              // Update ongoing request with new employee
               setOngoingRequest(prev => prev ? {
                 ...prev,
                 employeeName: employeeName

@@ -46,6 +46,8 @@ export const useRequestSimulation = () => {
       }
 
       console.log('Selected employee:', employee.full_name);
+      
+      // Immediately set the employee name to avoid "Unknown" display
       setCurrentEmployeeName(employee.full_name);
 
       // Simulate employee response delay (2-5 seconds)
