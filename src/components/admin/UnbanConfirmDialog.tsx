@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   AlertDialog,
@@ -11,16 +12,16 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface UnbanConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   onConfirm: () => void;
   userName: string;
   type: 'user' | 'employee';
 }
 
 const UnbanConfirmDialog: React.FC<UnbanConfirmDialogProps> = ({
-  open,
-  onOpenChange,
+  isOpen,
+  onClose,
   onConfirm,
   userName,
   type,
@@ -36,7 +37,7 @@ const UnbanConfirmDialog: React.FC<UnbanConfirmDialogProps> = ({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{getTitle()}</AlertDialogTitle>

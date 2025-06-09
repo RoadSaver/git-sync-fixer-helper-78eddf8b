@@ -1,3 +1,4 @@
+
 export const allTranslations: Record<string, { en: string; bg: string }> = {
   // Navigation and UI
   'services': { en: 'Services', bg: 'Услуги' },
@@ -89,12 +90,12 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'estimated-arrival': { en: 'Estimated Arrival', bg: 'Очаквано пристигане' },
 
   // Authentication
-  'Sign In': { en: 'Sign In', bg: 'Влез' },
-  'Create Account': { en: 'Create Account', bg: 'Създай акаунт' },
-  'Username': { en: 'Username', bg: 'Потребителско име' },
-  'Password': { en: 'Password', bg: 'Парола' },
-  'Email': { en: 'Email', bg: 'Имейл' },
-  'Phone': { en: 'Phone', bg: 'Телефон' },
+  'sign-in': { en: 'Sign In', bg: 'Влез' },
+  'create-account': { en: 'Create Account', bg: 'Създай акаунт' },
+  'username': { en: 'Username', bg: 'Потребителско име' },
+  'password': { en: 'Password', bg: 'Парола' },
+  'email': { en: 'Email', bg: 'Имейл' },
+  'phone': { en: 'Phone', bg: 'Телефон' },
   'login-successful': { en: 'Login successful', bg: 'Успешно влизане' },
   'welcome-to-roadsaver': { en: 'Welcome to RoadSaver', bg: 'Добре дошли в RoadSaver' },
   'registration-successful': { en: 'Registration successful', bg: 'Успешна регистрация' },
@@ -169,7 +170,7 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'new-request': { en: 'New Request', bg: 'Нова заявка' },
   'new-service-request': { en: 'A new service request has arrived', bg: 'Пристигна нова заявка за услуга' },
   'request-accepted': { en: 'Request Accepted', bg: 'Заявката е приета' },
-  'request-declined': { en: 'Request Declined', bg: 'Заявката е отказана' },
+  'request-declined-status': { en: 'Request Declined', bg: 'Заявката е отказана' },
   'decline-service-request': { en: 'Decline Service Request', bg: 'Откажи заявката за услуга' },
   'decline-reason': { en: 'Please provide a reason for declining this request:', bg: 'Моля, посочете причина за отказване на тази заявка:' },
   'enter-decline-reason': { en: 'Enter reason for declining...', bg: 'Въведете причина за отказване...' },
@@ -186,7 +187,7 @@ export const allTranslations: Record<string, { en: string; bg: string }> = {
   'tap-to-view-details': { en: 'Tap to view details', bg: 'Докоснете за детайли' },
   'review-price-and-decide': { en: 'Review Price & Decide', bg: 'Прегледай цената и реши' },
   'no-ongoing-requests': { en: 'No ongoing requests', bg: 'Няма текущи заявки' },
-  'Ongoing Requests': { en: 'Ongoing Requests', bg: 'Текущи заявки' },
+  'ongoing-requests-title': { en: 'Ongoing Requests', bg: 'Текущи заявки' },
   'auth-subtitle': { en: 'Your reliable road assistance partner', bg: 'Вашият надежден партньор за пътна помощ' },
   'configure-preferences': { en: 'Configure your app preferences and settings', bg: 'Конфигурирайте предпочитанията и настройките на приложението' },
 
