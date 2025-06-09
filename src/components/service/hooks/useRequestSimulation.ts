@@ -1,3 +1,4 @@
+
 import { useEmployeeSimulation } from '@/hooks/useEmployeeSimulation';
 import { ServiceType } from '../types/serviceRequestState';
 import { toast } from "@/components/ui/use-toast";
@@ -26,9 +27,17 @@ export const useRequestSimulation = () => {
   ) => {
     try {
       await loadEmployees();
-      const employee = getRandomEmployee(blacklistedEmployees);
+      
+      // Load blacklisted employees from database for this request
+      const dbBlacklistedEmployees = await SimulatedEmployeeBlacklistService.getBlacklistedEmployees(requestId);
+      const allBlacklistedEmployees = [...blacklistedEmployees, ...dbBlacklistedEmployees];
+      
+      console.log('Finding employee with blacklist:', allBlacklistedEmployees);
+      
+      const employee = getRandomEmployee(allBlacklistedEmployees);
       
       if (!employee) {
+        console.log('No available employees found');
         setStatus('declined');
         setDeclineReason('No available employees. Please try again later.');
         setShowRealTimeUpdate(false);
@@ -36,6 +45,7 @@ export const useRequestSimulation = () => {
         return;
       }
 
+      console.log('Selected employee:', employee.full_name);
       setCurrentEmployeeName(employee.full_name);
 
       // Simulate employee response delay (2-5 seconds)
@@ -54,6 +64,7 @@ export const useRequestSimulation = () => {
         const randomPrice = basePrice + Math.floor(Math.random() * 20) - 10;
         const finalPrice = Math.max(20, randomPrice);
         
+        console.log('Sending quote from employee:', employee.full_name, 'Amount:', finalPrice);
         onQuoteReceived(finalPrice);
         
         // Set employee location near user

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from "@/components/ui/use-toast";
 import { useApp } from '@/contexts/AppContext';
@@ -350,10 +351,10 @@ export const useServiceRequest = (
       });
       
       // Find new employee (blacklist will be loaded from database)
-      setTimeout(() => {
+      setTimeout(async () => {
         const newRequestId = ongoingRequest.id; // Keep same request ID
         
-        simulateEmployeeResponse(
+        await simulateEmployeeResponse(
           newRequestId,
           new Date().toISOString(),
           type,
