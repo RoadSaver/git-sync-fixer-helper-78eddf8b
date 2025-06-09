@@ -401,8 +401,8 @@ const EmployeeManagement: React.FC<EmployeeManagementProps> = ({ onBack }) => {
       />
 
       <UnbanConfirmDialog
-        open={showUnbanDialog}
-        onOpenChange={() => {
+        isOpen={showUnbanDialog}
+        onClose={() => {
           setShowUnbanDialog(false);
           setSelectedEmployee(null);
         }}
