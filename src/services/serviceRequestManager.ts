@@ -1,7 +1,5 @@
-
 import { toast } from "@/components/ui/use-toast";
 import { ServiceType } from '@/components/service/types/serviceRequestState';
-import { useEmployeeSimulation } from '@/hooks/useEmployeeSimulation';
 import { SimulatedEmployeeBlacklistService } from '@/services/simulatedEmployeeBlacklistService';
 import { UserHistoryService } from '@/services/userHistoryService';
 
@@ -35,10 +33,16 @@ export interface ServiceRequestState {
   updatedAt: string;
 }
 
+interface EmployeeSimulationFunctions {
+  loadEmployees: () => Promise<void>;
+  getRandomEmployee: (blacklisted: string[]) => any;
+}
+
 export class ServiceRequestManager {
   private static instance: ServiceRequestManager;
   private currentRequest: ServiceRequestState | null = null;
   private listeners: Array<(request: ServiceRequestState | null) => void> = [];
+  private employeeSimulation: EmployeeSimulationFunctions | null = null;
   
   private constructor() {}
   
@@ -47,6 +51,11 @@ export class ServiceRequestManager {
       ServiceRequestManager.instance = new ServiceRequestManager();
     }
     return ServiceRequestManager.instance;
+  }
+  
+  // Initialize with employee simulation functions
+  initialize(employeeSimulation: EmployeeSimulationFunctions): void {
+    this.employeeSimulation = employeeSimulation;
   }
   
   // Subscribe to state changes
@@ -93,10 +102,10 @@ export class ServiceRequestManager {
   
   // Find available employee (not blacklisted)
   private async findAvailableEmployee(): Promise<void> {
-    if (!this.currentRequest) return;
+    if (!this.currentRequest || !this.employeeSimulation) return;
     
     try {
-      const { loadEmployees, getRandomEmployee } = useEmployeeSimulation();
+      const { loadEmployees, getRandomEmployee } = this.employeeSimulation;
       await loadEmployees();
       
       // Get blacklisted employees from database

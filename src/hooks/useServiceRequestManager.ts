@@ -1,12 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ServiceRequestManager, ServiceRequestState } from '@/services/serviceRequestManager';
 import { ServiceType } from '@/components/service/types/serviceRequestState';
+import { useEmployeeSimulation } from '@/hooks/useEmployeeSimulation';
 
 export const useServiceRequestManager = () => {
   const [currentRequest, setCurrentRequest] = useState<ServiceRequestState | null>(null);
+  const { loadEmployees, getRandomEmployee } = useEmployeeSimulation();
   
   useEffect(() => {
     const manager = ServiceRequestManager.getInstance();
+    
+    // Initialize manager with employee simulation functions
+    manager.initialize({ loadEmployees, getRandomEmployee });
     
     // Subscribe to state changes
     const unsubscribe = manager.subscribe((request) => {
@@ -17,7 +22,7 @@ export const useServiceRequestManager = () => {
     setCurrentRequest(manager.getCurrentRequest());
     
     return unsubscribe;
-  }, []);
+  }, [loadEmployees, getRandomEmployee]);
   
   const createRequest = useCallback(async (
     type: ServiceType,
