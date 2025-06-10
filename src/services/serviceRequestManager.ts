@@ -67,6 +67,7 @@ export class ServiceRequestManager {
   }
   
   private notifyListeners() {
+    console.log('ServiceRequestManager: Notifying listeners with state:', this.currentRequest);
     this.listeners.forEach(listener => listener(this.currentRequest));
   }
   
@@ -92,6 +93,7 @@ export class ServiceRequestManager {
       updatedAt: new Date().toISOString()
     };
     
+    console.log('ServiceRequestManager: Created new request:', this.currentRequest);
     this.notifyListeners();
     
     // Start finding employee
@@ -179,9 +181,11 @@ export class ServiceRequestManager {
     
     this.currentRequest.status = 'quote_received';
     this.currentRequest.updatedAt = new Date().toISOString();
-    this.notifyListeners();
     
     console.log('Quote generated:', finalPrice, 'from', this.currentRequest.assignedEmployee.name);
+    console.log('Updated request state:', this.currentRequest);
+    
+    this.notifyListeners();
   }
   
   // Accept quote
@@ -245,9 +249,11 @@ export class ServiceRequestManager {
     
     this.currentRequest.status = 'quote_received';
     this.currentRequest.updatedAt = new Date().toISOString();
-    this.notifyListeners();
     
     console.log('Revised quote generated:', revisedAmount, 'from', this.currentRequest.assignedEmployee.name);
+    console.log('Updated request state for revised quote:', this.currentRequest);
+    
+    this.notifyListeners();
     
     toast({
       title: "Revised Quote Received",

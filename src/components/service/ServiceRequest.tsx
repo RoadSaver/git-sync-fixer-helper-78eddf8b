@@ -44,15 +44,29 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Handle showing price quote dialog - check for both quote_received status and if quote exists
-  const showPriceQuote = currentRequest?.status === 'quote_received' && currentRequest?.currentQuote;
-  const showRealTimeUpdate = currentRequest?.status === 'request_accepted' || 
-                            currentRequest?.status === 'in_progress';
+  // Enhanced price quote dialog visibility logic
+  const showPriceQuote = React.useMemo(() => {
+    console.log('Checking price quote visibility:', {
+      status: currentRequest?.status,
+      hasQuote: !!currentRequest?.currentQuote,
+      quoteAmount: currentRequest?.currentQuote?.amount,
+      shouldShowPriceQuote
+    });
+    
+    return (currentRequest?.status === 'quote_received' && 
+            currentRequest?.currentQuote && 
+            currentRequest.currentQuote.amount > 0) || shouldShowPriceQuote;
+  }, [currentRequest?.status, currentRequest?.currentQuote, shouldShowPriceQuote]);
+  
+  const showRealTimeUpdate = React.useMemo(() => {
+    return currentRequest?.status === 'request_accepted' || 
+           currentRequest?.status === 'in_progress';
+  }, [currentRequest?.status]);
   
   // Auto-show price quote if requested
   useEffect(() => {
     if (open && shouldShowPriceQuote && showPriceQuote) {
-      // Price quote dialog will be shown automatically
+      console.log('Auto-showing price quote due to shouldShowPriceQuote flag');
     }
   }, [open, shouldShowPriceQuote, showPriceQuote]);
   
@@ -62,6 +76,23 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       onClose();
     }
   }, [currentRequest?.status, onClose]);
+  
+  // Debug logging for state changes
+  useEffect(() => {
+    console.log('ServiceRequest state changed:', {
+      currentRequest: currentRequest ? {
+        id: currentRequest.id,
+        status: currentRequest.status,
+        hasQuote: !!currentRequest.currentQuote,
+        quoteAmount: currentRequest.currentQuote?.amount,
+        employeeName: currentRequest.currentQuote?.employeeName,
+        declineCount: currentRequest.declineCount,
+        hasReceivedRevision: currentRequest.hasReceivedRevision
+      } : null,
+      showPriceQuote,
+      showRealTimeUpdate
+    });
+  }, [currentRequest, showPriceQuote, showRealTimeUpdate]);
   
   const handleSubmit = async () => {
     if (!validateMessage(message, type)) {
@@ -118,10 +149,12 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   };
   
   const handleAcceptQuote = async () => {
+    console.log('Accepting quote...');
     await acceptQuote();
   };
   
   const handleDeclineQuote = async () => {
+    console.log('Declining quote...');
     await declineQuote();
   };
   
@@ -217,15 +250,15 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
         <AlertDialog open={showCancelConfirmDialog} onOpenChange={setShowCancelConfirmDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>{t('confirm-cancellation-title')}</AlertDialogTitle>
+              <AlertDialogTitle>{t("confirm-cancellation-title")}</AlertDialogTitle>
               <AlertDialogDescription>
-                {t('confirm-cancellation-desc')}
+                {t("confirm-cancellation-desc")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowCancelConfirmDialog(false)}>{t('no')}</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setShowCancelConfirmDialog(false)}>{t("no")}</AlertDialogCancel>
               <AlertDialogAction onClick={confirmCancelRequest} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-                {t('yes-cancel')}
+                {t("yes-cancel")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
