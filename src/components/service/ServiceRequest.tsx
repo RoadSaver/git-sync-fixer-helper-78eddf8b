@@ -43,22 +43,11 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [message, setMessage] = useState(() => serviceMessages[type] || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
-  const [showWaitingForRevision, setShowWaitingForRevision] = useState(false);
   
-  // Handle showing price quote dialog
-  const showPriceQuote = currentRequest?.status === 'quote_received';
+  // Handle showing price quote dialog - check for both quote_received status and if quote exists
+  const showPriceQuote = currentRequest?.status === 'quote_received' && currentRequest?.currentQuote;
   const showRealTimeUpdate = currentRequest?.status === 'request_accepted' || 
-                            currentRequest?.status === 'in_progress' || 
-                            showWaitingForRevision;
-  
-  // Handle waiting for revision state
-  useEffect(() => {
-    if (currentRequest?.status === 'quote_declined' && !currentRequest.hasReceivedRevision) {
-      setShowWaitingForRevision(true);
-    } else {
-      setShowWaitingForRevision(false);
-    }
-  }, [currentRequest?.status, currentRequest?.hasReceivedRevision]);
+                            currentRequest?.status === 'in_progress';
   
   // Auto-show price quote if requested
   useEffect(() => {
@@ -220,7 +209,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
           onCancelRequest={cancelRequest}
           hasDeclinedOnce={currentRequest.declineCount > 0 || currentRequest.hasReceivedRevision}
           employeeName={currentRequest.currentQuote.employeeName}
-          showWaitingForRevision={showWaitingForRevision}
+          showWaitingForRevision={false}
         />
       )}
 

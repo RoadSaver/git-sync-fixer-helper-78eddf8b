@@ -7,7 +7,7 @@ export interface ServiceRequestState {
   id: string;
   type: ServiceType;
   userLocation: { lat: number; lng: number };
-  status: 'finding_employee' | 'quote_received' | 'quote_declined' | 'quote_accepted' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'request_accepted' | 'quote_received' | 'quote_declined' | 'quote_accepted' | 'in_progress' | 'completed' | 'cancelled';
   
   // Employee data
   assignedEmployee: {
@@ -82,7 +82,7 @@ export class ServiceRequestManager {
       id: requestId,
       type,
       userLocation,
-      status: 'finding_employee',
+      status: 'request_accepted',
       assignedEmployee: null,
       currentQuote: null,
       declineCount: 0,
@@ -247,6 +247,8 @@ export class ServiceRequestManager {
     this.currentRequest.updatedAt = new Date().toISOString();
     this.notifyListeners();
     
+    console.log('Revised quote generated:', revisedAmount, 'from', this.currentRequest.assignedEmployee.name);
+    
     toast({
       title: "Revised Quote Received",
       description: `${this.currentRequest.assignedEmployee.name} sent a revised quote of ${revisedAmount} BGN.`
@@ -275,7 +277,7 @@ export class ServiceRequestManager {
       this.currentRequest.currentQuote = null;
       this.currentRequest.declineCount = 0;
       this.currentRequest.hasReceivedRevision = false;
-      this.currentRequest.status = 'finding_employee';
+      this.currentRequest.status = 'request_accepted';
       this.currentRequest.updatedAt = new Date().toISOString();
       this.notifyListeners();
       
