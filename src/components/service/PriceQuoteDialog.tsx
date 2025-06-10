@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showDeclineConfirm, setShowDeclineConfirm] = useState(false);
 
-  console.log('PriceQuoteDialog props:', { 
+  console.log('PriceQuoteDialog render:', { 
     open, 
     serviceType, 
     priceQuote, 
@@ -80,10 +80,13 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     onAccept();
   };
 
-  // Allow dialog to close when clicking outside or pressing escape
+  // Prevent dialog from closing when clicking outside - only allow programmatic closing
   const handleOpenChange = (open: boolean) => {
+    // Only allow closing if it's being closed programmatically (open = false)
+    // Don't allow backdrop clicks to close the dialog
     if (!open) {
-      onClose();
+      console.log('Dialog close attempted - preventing backdrop close');
+      return; // Prevent closing via backdrop click
     }
   };
 
@@ -92,7 +95,7 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
     return (
       <WaitingForRevisionDialog
         open={open}
-        onOpenChange={handleOpenChange}
+        onOpenChange={() => {}} // Prevent closing via backdrop
         employeeName={employeeName}
         onCancelRequest={handleCancelRequest}
       />
@@ -102,7 +105,11 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-md">
+        <DialogContent 
+          className="max-w-md"
+          onPointerDownOutside={(e) => e.preventDefault()} // Prevent backdrop clicks
+          onEscapeKeyDown={(e) => e.preventDefault()} // Prevent ESC key closing
+        >
           <DialogHeader>
             <DialogTitle>
               {hasDeclinedOnce ? 'Revised Price Quote' : 'Price Quote Received'}

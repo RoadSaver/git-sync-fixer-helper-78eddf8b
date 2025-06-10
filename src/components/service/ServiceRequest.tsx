@@ -44,35 +44,46 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancelConfirmDialog, setShowCancelConfirmDialog] = useState(false);
   
-  // Enhanced price quote dialog visibility logic
+  // Enhanced price quote dialog visibility logic with automatic opening
   const showPriceQuote = React.useMemo(() => {
-    console.log('Checking price quote visibility:', {
+    const shouldShow = (currentRequest?.status === 'quote_received' && 
+                      currentRequest?.currentQuote && 
+                      currentRequest.currentQuote.amount > 0) || shouldShowPriceQuote;
+    
+    console.log('ServiceRequest - showPriceQuote calculation:', {
       status: currentRequest?.status,
       hasQuote: !!currentRequest?.currentQuote,
       quoteAmount: currentRequest?.currentQuote?.amount,
-      shouldShowPriceQuote
+      shouldShowPriceQuote,
+      result: shouldShow
     });
     
-    return (currentRequest?.status === 'quote_received' && 
-            currentRequest?.currentQuote && 
-            currentRequest.currentQuote.amount > 0) || shouldShowPriceQuote;
+    return shouldShow;
   }, [currentRequest?.status, currentRequest?.currentQuote, shouldShowPriceQuote]);
   
   const showRealTimeUpdate = React.useMemo(() => {
-    return currentRequest?.status === 'request_accepted' || 
-           currentRequest?.status === 'in_progress';
+    const shouldShow = currentRequest?.status === 'request_accepted' || 
+                     currentRequest?.status === 'in_progress';
+    
+    console.log('ServiceRequest - showRealTimeUpdate calculation:', {
+      status: currentRequest?.status,
+      result: shouldShow
+    });
+    
+    return shouldShow;
   }, [currentRequest?.status]);
   
-  // Auto-show price quote if requested
+  // Auto-show price quote when it becomes available
   useEffect(() => {
-    if (open && shouldShowPriceQuote && showPriceQuote) {
-      console.log('Auto-showing price quote due to shouldShowPriceQuote flag');
+    if (showPriceQuote) {
+      console.log('ServiceRequest - Price quote should be visible now');
     }
-  }, [open, shouldShowPriceQuote, showPriceQuote]);
+  }, [showPriceQuote]);
   
   // Close dialog when service is completed
   useEffect(() => {
     if (currentRequest?.status === 'completed') {
+      console.log('ServiceRequest - Service completed, closing dialog');
       onClose();
     }
   }, [currentRequest?.status, onClose]);
@@ -130,8 +141,9 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   };
   
   const handleAttemptClose = () => {
+    // If price quote is showing, don't allow closing via backdrop
     if (showPriceQuote) {
-      onClose();
+      console.log('ServiceRequest - Preventing close while price quote is showing');
       return;
     }
     
@@ -149,12 +161,12 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   };
   
   const handleAcceptQuote = async () => {
-    console.log('Accepting quote...');
+    console.log('ServiceRequest - Accepting quote...');
     await acceptQuote();
   };
   
   const handleDeclineQuote = async () => {
-    console.log('Declining quote...');
+    console.log('ServiceRequest - Declining quote...');
     await declineQuote();
   };
   
@@ -234,7 +246,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
       {showPriceQuote && currentRequest?.currentQuote && (
         <PriceQuoteDialog
           open={showPriceQuote}
-          onClose={onClose}
+          onClose={() => {}} // Prevent manual closing
           serviceType={type}
           priceQuote={currentRequest.currentQuote.amount}
           onAccept={handleAcceptQuote}

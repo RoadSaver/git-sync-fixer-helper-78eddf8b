@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -23,7 +22,11 @@ const WaitingForRevisionDialog: React.FC<WaitingForRevisionDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent 
+        className="max-w-md"
+        onPointerDownOutside={(e) => e.preventDefault()} // Prevent backdrop clicks
+        onEscapeKeyDown={(e) => e.preventDefault()} // Prevent ESC key closing
+      >
         <DialogHeader>
           <DialogTitle>Waiting for Response</DialogTitle>
         </DialogHeader>
