@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ServiceRequestDialog from './ServiceRequestDialog';
 import ServiceRequestForm from './ServiceRequestForm';
@@ -48,7 +47,9 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
   
   // Handle showing price quote dialog
   const showPriceQuote = currentRequest?.status === 'quote_received';
-  const showRealTimeUpdate = currentRequest?.status === 'finding_employee' || showWaitingForRevision;
+  const showRealTimeUpdate = currentRequest?.status === 'request_accepted' || 
+                            currentRequest?.status === 'in_progress' || 
+                            showWaitingForRevision;
   
   // Handle waiting for revision state
   useEffect(() => {
@@ -146,7 +147,7 @@ const ServiceRequest: React.FC<ServiceRequestProps> = ({
     if (!currentRequest) return 'pending';
     
     switch (currentRequest.status) {
-      case 'finding_employee':
+      case 'request_accepted':
         return 'pending';
       case 'quote_received':
         return 'pending';

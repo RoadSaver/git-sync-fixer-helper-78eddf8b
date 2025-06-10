@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -65,7 +64,7 @@ const PriceQuoteDialog: React.FC<PriceQuoteDialogProps> = ({
       // First decline - show confirmation
       setShowDeclineConfirm(true);
     } else {
-      // Second decline - direct decline (blacklist employee)
+      // Second decline (Final Decline) - direct decline (blacklist employee and find new one)
       onDecline(true);
     }
   };

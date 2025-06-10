@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useTranslation } from '@/utils/translations';
@@ -71,7 +70,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
     const status = (() => {
       switch (currentRequest.status) {
-        case 'finding_employee':
+        case 'request_accepted':
         case 'quote_received':
         case 'quote_declined':
           return 'pending';

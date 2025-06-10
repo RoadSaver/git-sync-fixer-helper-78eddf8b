@@ -43,7 +43,7 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
   const getStatusIcon = () => {
     switch (status) {
       case 'pending':
-        return <Clock className="h-8 w-8 text-yellow-600" />;
+        return <CheckCircle className="h-8 w-8 text-green-600" />; // Changed to green checkmark for "Request Accepted"
       case 'accepted':
         return <CheckCircle className="h-8 w-8 text-green-600" />;
       case 'declined':
@@ -56,7 +56,7 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
   const getStatusColor = () => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-green-100 text-green-800 border-green-200'; // Changed to green for "Request Accepted"
       case 'accepted':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'declined':
@@ -69,7 +69,7 @@ const ServiceRequestStatus: React.FC<ServiceRequestStatusProps> = ({
   const getStatusText = () => {
     switch (status) {
       case 'pending':
-        return hasPriceQuote ? t('quote-received') : t('finding-employee');
+        return hasPriceQuote ? t('quote-received') : 'Request Accepted'; // Changed from "Finding technician..."
       case 'accepted':
         return t('employee-on-way');
       case 'declined':
